@@ -12,6 +12,7 @@ services:
 
   postgres:
     image: postgres:latest
+    container_name: keycloak-postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
     environment:
@@ -23,6 +24,7 @@ services:
 
   keycloak:
     image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak-server
     environment:
       DB_VENDOR: postgres
       DB_ADDR: postgres
