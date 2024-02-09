@@ -7,6 +7,7 @@ volumes:
 #  default:
 #    name: kong-net
 #    external: true
+name: keycloak-cluster
 services:
 
   postgres:
