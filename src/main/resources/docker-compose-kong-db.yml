@@ -63,6 +63,7 @@ services:
     container_name: konga
     environment:
       - NODE_ENV=production
+      - KONG_URL=http://kong:8001
 
 volumes:
   db-data-kong-postgres:

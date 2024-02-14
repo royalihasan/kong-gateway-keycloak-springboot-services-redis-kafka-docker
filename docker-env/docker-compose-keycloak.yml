@@ -20,7 +20,7 @@ services:
       POSTGRES_USER: keycloak
       POSTGRES_PASSWORD: password
     ports:
-      - 5432:5432
+      - 5433:5432
 
   keycloak:
     image: quay.io/keycloak/keycloak:latest
@@ -32,6 +32,7 @@ services:
       DB_PASSWORD: password
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
+      DB_PORT: 5433
     ports:
       - 8080:8080
     depends_on:

@@ -1,0 +1,1 @@
+curl https://d1i4a15mxbxib1.cloudfront.net/api/plugins/jcustenborder/kafka-connect-redis/versions/0.0.5/jcustenborder-kafka-connect-redis-0.0.5.zip -O /tmp/ic.zip

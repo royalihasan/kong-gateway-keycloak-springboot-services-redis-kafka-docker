@@ -1,0 +1,158 @@
+version: '3.9'
+name: redis-connect-cluster
+services:
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:latest
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    command:
+      - redpanda
+      - start
+      - --overprovisioned
+      - --smp
+      - "1"
+      - --memory
+      - "1G"
+      - --reserve-memory
+      - "0M"
+      - --node-id
+      - "0"
+      - --kafka-addr
+      - PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
+      - --advertise-kafka-addr
+      - PLAINTEXT://redpanda:29092,OUTSIDE://redpanda:9092
+      - --check=false
+
+    networks:
+      - kafka-network
+  console:
+    image: docker.redpanda.com/redpandadata/console:latest
+    entrypoint: /bin/sh
+    command: -c "echo \"$$CONSOLE_CONFIG_FILE\" > /tmp/redpanda-config.yml; /app/console"
+    environment:
+      CONFIG_FILEPATH: /tmp/redpanda-config.yml
+      CONSOLE_CONFIG_FILE: |
+        kafka:
+          brokers: [ "redpanda:9092" ]
+          schemaRegistry:
+             enabled: true
+             urls: ["http://redpanda:8081"]
+             username: console
+             password: redacted 
+          protobuf:
+            enabled: true
+            schemaRegistry:
+              enabled: true
+              refreshInterval: 5m
+        redpanda:
+          adminApi:
+            enabled: true
+            urls: ["http://redpanda:9644"]
+        
+        connect:
+          enabled: true
+          clusters:
+            - name: local-connect-cluster
+              url: http://connect:8083/
+    ports:
+      - 9090:8080
+    networks:
+      - kafka-network
+    depends_on:
+      - redpanda
+
+  connect:
+    image: debezium/connect:latest
+    container_name: connect
+    environment:
+      BOOTSTRAP_SERVERS: "redpanda:9092"
+      GROUP_ID: "1"
+      CONFIG_STORAGE_TOPIC: "inventory.configs"
+      OFFSET_STORAGE_TOPIC: "inventory.offset"
+      STATUS_STORAGE_TOPIC: "inventory.status"
+      CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_INTERNAL_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: false
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: false
+      CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: http://redpanda:8081
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://redpanda:8081
+      CONNECT_LOG4J_ROOT_LOGLEVEL: "INFO"
+
+    depends_on: [ redpanda ]
+    ports:
+      - "8083:8083"
+    networks:
+      - kafka-network
+  postgres:
+    image: postgres:latest
+    container_name: services-postgres
+    volumes:
+      - postgres_services_data:/var/lib/postgresql/data
+    command: postgres -c wal_level=logical
+    environment:
+      POSTGRES_DB: services
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - 5432:5432
+    networks:
+      - kafka-network
+
+  redis:
+    image: redis
+    hostname: redis
+    container_name: redis
+    #    command: redis-server /usr/local/etc/redis/redis.conf
+    ports:
+      - "6379:6379"
+    #    volumes:
+    #      - ./data:/data
+    #      - ./config/redis.conf:/usr/local/etc/redis/redis.conf
+    networks:
+      - kafka-network
+  redis-insight:
+    image: redislabs/redisinsight:latest
+    links:
+      - redis
+    restart: always
+    ports:
+      - "8002:8001"
+    volumes:
+      - ./redisinsight:/data
+    environment:
+      REDIS_URI: redis://redis:6379
+
+    networks:
+      - kafka-network
+  redis-commander:
+    depends_on:
+      - redis
+    image: ghcr.io/joeferner/redis-commander:latest
+    container_name: redis_comndr
+    environment:
+      REDIS_HOSTS: local:redis:6379
+    #      REDIS_PASSWORD: "admin123"
+    ports:
+      - 8081:8081
+    links:
+      - redis:redis
+    restart: always
+    networks:
+      - kafka-network
+
+#################################
+#~~~~~~~~~~NETWORKS~~~~~~~~~~~~~~
+#################################
+networks:
+  default:
+    name: kong-net
+    external: true
+  kafka-network:
+    driver: bridge
+#################################
+#~~~~~~~~~~Volumes~~~~~~~~~~~~~~
+#################################
+volumes:
+  postgres_services_data:
+    driver: local
