@@ -1,12 +1,12 @@
-version: '3'
-
+version: '3.8'
+name: kong-gateway-cluster
 services:
 
   kong-database:
     image: postgres:latest
     container_name: kong-database
     ports:
-      - 5434:5432
+      - 5432:5432
     environment:
       - POSTGRES_USER=kong
       - POSTGRES_DB=kong
@@ -20,7 +20,6 @@ services:
     environment:
       - KONG_DATABASE=postgres
       - KONG_PG_HOST=kong-database
-      - KONG_PG_PORT=5434
       - KONG_PG_PASSWORD=kong
       - KONG_CASSANDRA_CONTACT_POINTS=kong-database
     command: kong migrations bootstrap
@@ -55,6 +54,8 @@ services:
       - kong-database:kong-database
     depends_on:
       - kong-migrations
+    volumes:
+      - ./plugins/redis_lookups:/usr/local/share/lua/5.1/kong/plugins/redis_lookups
 
   konga:
     image: pantsel/konga
@@ -69,6 +70,8 @@ services:
 
 volumes:
   db-data-kong-postgres:
+  plugins:
+  configs:
 
 networks:
   default:
