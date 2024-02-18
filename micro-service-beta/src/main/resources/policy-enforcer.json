@@ -1,0 +1,8 @@
+{
+  "realm": "service_beta",
+  "auth-server-url": "http://localhost:8080",
+  "resource": "client_service_beta",
+  "credentials": {
+    "secret": "wq0S7U8TFISWUUTE0VzfXcNISmDDIYqM"
+  }
+}
