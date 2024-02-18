@@ -84,6 +84,8 @@ services:
       - "8083:8083"
     networks:
       - kafka-network
+    volumes:
+      - ./plugins/jcustenborder-kafka-connect-redis-0.0.5/:/connect/jcustenborder-kafka-connect-redis-0.0.5
   postgres:
     image: postgres:latest
     container_name: services-postgres
@@ -95,7 +97,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - 5432:5432
+      - 5434:5432
     networks:
       - kafka-network
 
