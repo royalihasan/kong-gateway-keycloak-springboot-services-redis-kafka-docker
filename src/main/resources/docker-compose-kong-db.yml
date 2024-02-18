@@ -56,6 +56,7 @@ services:
       - kong-migrations
     volumes:
       - ./plugins/redis_lookups:/usr/local/share/lua/5.1/kong/plugins/redis_lookups
+      - ./plugins/keycloak_rpt_redis:/usr/local/share/lua/5.1/kong/plugins/keycloak_rpt_redis
 
   konga:
     image: pantsel/konga

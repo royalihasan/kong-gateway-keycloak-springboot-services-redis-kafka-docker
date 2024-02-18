@@ -25,6 +25,7 @@ function KeycloakIntrospectionHandler:access(config)
     local httpc = http.new()
 
     local headers = {
+
         ["Content-Type"] = "application/x-www-form-urlencoded",
         ["Authorization"] = "Basic " .. ngx.encode_base64(config.client_id .. ":" .. config.client_secret),
     }
